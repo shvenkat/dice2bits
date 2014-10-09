@@ -12,17 +12,19 @@ transparent and easily verified manner.
 dice2bits accepts text input representing a sequence of dice rolls, and
 provides binary output and its entropy. Input is of the form "2533146...",
 where each digit represents the conventional result of a dice roll i.e. the
-number on the top face of the die. Alternatively, dice can be shaken in a box
-and allowed to settle along an inside edge, such that two adjacent faces of
-each die are in contact with the box. In this case, the result of each roll
-is fully specified by the numbers on the faces opposite the contacts, read
-in order. This method captures more entropy per roll, encoding it in the input
-as pairs of digits separated by spaces.
+number on the top face of a die. Alternatively, dice can be shaken in a box and
+allowed to settle along an inside edge, such that two adjacent faces of each
+die are in contact with the box. In this case, the result of each roll is fully
+specified by the numbers on the faces opposite the contacts, read in some
+order. This method captures more entropy per roll, and uses an alternative
+input format with pairs of digits separated by spaces, as in "42 51 31 ...".
 
-Security
+# RECOMMENDATIONS
 
-Verifying (samples of) the output against the input by hand
-Whitening
-XORing with other sources
-Exposure to keyloggers, other userspace code, X clients, etc.
-Exposure to untrusted compilers and libraries
+* Run under a different user account on the console
+
+TODO: Security issues
+* Verifying samples of the output against the input by hand to address exposure
+  to untrusted hardware, OS, compilers and libraries
+* Output whitening, XORing with other sources of entropy
+* Exposure to keyloggers, other userspace code, strace, X clients, etc.
