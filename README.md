@@ -28,3 +28,16 @@ TODO: Security issues
   to untrusted hardware, OS, compilers and libraries
 * Output whitening, XORing with other sources of entropy
 * Exposure to keyloggers, other userspace code, strace, X clients, etc.
+See:
+http://www.mathstat.dal.ca/~selinger/ups/ttyspy.c
+http://stackoverflow.com/questions/691676/getting-exclusive-access-to-a-tty-device-from-a-root-program-on-linux
+http://superuser.com/questions/488908/sharing-a-serial-port-between-two-processes
+http://man7.org/linux/man-pages/man2/flock.2.html
+http://www.suspectclass.com/sgifford/interceptty/interceptty.html
+http://stackoverflow.com/questions/12062466/mandatory-file-lock-on-linux
+http://stackoverflow.com/questions/15762752/exclusively-open-a-device-file-in-linux
+http://lkml.iu.edu//hypermail/linux/kernel/0506.1/0414.html
+http://stackoverflow.com/questions/691676/getting-exclusive-access-to-a-tty-device-from-a-root-program-on-linux?rq=1
+http://linux.die.net/man/2/mlock
+http://linux.die.net/man/1/secpwgen
+http://crypto.stackexchange.com/questions/6175/how-to-best-obtain-bits-sequences-from-throwing-normal-dice
