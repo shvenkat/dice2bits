@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <bitbuf.h>
+#include "bitbuf.h"
 
 /** Flush a bit buffer out to a file
  *

@@ -1,6 +1,7 @@
-#include <stdio.h>
+#ifndef _bitbuf_h
+#define _bitbuf_h
 
-#define BUFSIZE 32    /* Should be a small positive integer */
+#define BUFSIZE 32    /* a small positive integer */
 
 struct bitbuf {
     unsigned int[BUFSIZE] bs;
@@ -9,7 +10,9 @@ struct bitbuf {
     size_t  unit;
 };
 
-int flush_bitbuf(struct bitbuf *bits, FILE *out)
+int flush_bitbuf(struct bitbuf *bits, FILE *out);
 
 int fill_bitbuf(unsigned int x, unsigned int n
-                struct bitbuf *bits, FILE *out)
+                struct bitbuf *bits, FILE *out);
+
+#endif
