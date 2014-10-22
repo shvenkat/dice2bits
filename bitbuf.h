@@ -12,7 +12,7 @@ struct bitbuf {
 
 int flush_bitbuf(struct bitbuf *bits, FILE *out);
 
-int fill_bitbuf(unsigned int x, unsigned int n
+int fill_bitbuf(unsigned int x, unsigned int n,
                 struct bitbuf *bits, FILE *out);
 
 #endif
