@@ -1,2 +1,4 @@
 dice2bits
 *.swp
+*.dSYM
+out

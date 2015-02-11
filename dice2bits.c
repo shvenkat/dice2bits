@@ -37,10 +37,13 @@ int config_tty(FILE *in, struct termios *prev_tattr)
 {
     struct termios t;
 
+    if (setvbuf(in, NULL, _IONBF, 0) != 0)
+        return -1;
     if (tcgetattr(fileno(in), prev_tattr) == 0) {
         t = *prev_tattr;
+        cfmakeraw(&t);
         t.c_lflag &= ~(ECHO|ISIG);
-        if (tcsetattr(fileno(in), TCSAFLUSH|TCSASOFT, &t) == 0)
+        if (tcsetattr(fileno(in), TCSAFLUSH|TCSASOFT|TCSANOW, &t) == 0)
             return 0;
         else
             return -1;
@@ -55,7 +58,7 @@ int config_tty(FILE *in, struct termios *prev_tattr)
  */
 int restore_tty(FILE *in, struct termios const *prev_tattr)
 {
-    return tcsetattr(fileno(in), TCSAFLUSH|TCSASOFT, prev_tattr);
+    return tcsetattr(fileno(in), TCSAFLUSH|TCSASOFT|TCSANOW, prev_tattr);
 }
 
 /** Convert ASCII string representing a sequence of dice rolls to bit output
@@ -66,7 +69,7 @@ int roll_bits(FILE *in, FILE *out, FILE *err, int is_interactive,
     struct bitbuf bits = {.pos  = 0,
                           .unit = sizeof(int) * 8,
                           .size = sizeof(int) * 8 * BUFSIZE};
-    char const *prompt = "Enter dice rolls ";
+    char const *prompt = "\rEnter dice rolls ";
     int top, side, delim;
     int input_err = 0;
     unsigned int num_rolls = 0;
@@ -78,14 +81,19 @@ int roll_bits(FILE *in, FILE *out, FILE *err, int is_interactive,
         fputs(prompt, err);
     do {
         top = fgetc(in);
-        if (top == EOF || (char)top == '\n')
+        if (top == EOF || (char)top == '\n' || (char)top == '\r')
             break;
         if (is_extended == 0) {
             num_rolls += 1;
             if (roll_int_greedy((char)top, &x, &e) != 0)
                 continue;
-            fill_bitbuf(x, e, &bits, out);
+            if (fill_bitbuf(x, e, &bits, out) != 0)
+                continue;
             entropy += e;
+            if (is_interactive) {
+                fputs(prompt, err);
+                fprintf(err, "(bits extracted: %i) ", entropy);
+            }
         } else {
             side = fgetc(in);
             if (side == EOF || (char)side == '\n') {
@@ -110,10 +118,13 @@ int roll_bits(FILE *in, FILE *out, FILE *err, int is_interactive,
             }
         }
     } while (1);
-    flush_bitbuf(&bits, out);
+    if (flush_bitbuf(&bits, out) != 0)
+        warn("WARNING: Output error");
+    if (fflush(out) != 0)
+        warn("WARNING: Error flushing output");
     if (input_err == 1)
         warn("WARNING: Input error, see usage");
-    fprintf(err, "%i bits generated from %i rolls\n", entropy, num_rolls);
+    fprintf(err, "\n%i bits generated from %i rolls\n", entropy, num_rolls);
 }
 
 int main()
