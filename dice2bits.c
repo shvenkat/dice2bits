@@ -1,11 +1,12 @@
-# include <stdio.h>
-# include <unistd.h>
-# include <string.h>
-# include <stdlib.h>
-# include <assert.h>
-# include <termios.h>
-# include <errno.h>
-# include <bitbuf.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <termios.h>
+#include <errno.h>
+#include "bitbuf.h"
+#include "d6.h"
 
 #ifndef TCSASOFT
 #define TCSASOFT 0
@@ -37,7 +38,7 @@ int config_tty(FILE *in, struct termios *prev_tattr)
     struct termios t;
 
     if (tcgetattr(fileno(in), prev_tattr) == 0) {
-        t = *prev_tcattr;
+        t = *prev_tattr;
         t.c_lflag &= ~(ECHO|ISIG);
         if (tcsetattr(fileno(in), TCSAFLUSH|TCSASOFT, &t) == 0)
             return 0;
@@ -65,12 +66,13 @@ int roll_bits(FILE *in, FILE *out, FILE *err, int is_interactive,
     struct bitbuf bits = {.pos  = 0,
                           .unit = sizeof(int) * 8,
                           .size = sizeof(int) * 8 * BUFSIZE};
-    int entropy = 0;
-    int num_rolls = 0;
     char const *prompt = "Enter dice rolls ";
     int top, side, delim;
-    int x = -1;
     int input_err = 0;
+    unsigned int num_rolls = 0;
+    unsigned int x = 0;
+    unsigned int e = 0;
+    unsigned int entropy = 0;
 
     if (is_interactive)
         fputs(prompt, err);
@@ -80,11 +82,10 @@ int roll_bits(FILE *in, FILE *out, FILE *err, int is_interactive,
             break;
         if (is_extended == 0) {
             num_rolls += 1;
-            x = roll_int((char)top);
-            if (x < 0)
+            if (roll_int_greedy((char)top, &x, &e) != 0)
                 continue;
-            entropy += 2;
-            fill_bitbuf((unsigned int)x, 2, &bits, out);
+            fill_bitbuf(x, e, &bits, out);
+            entropy += e;
         } else {
             side = fgetc(in);
             if (side == EOF || (char)side == '\n') {
@@ -92,13 +93,14 @@ int roll_bits(FILE *in, FILE *out, FILE *err, int is_interactive,
                 break;
             }
             num_rolls += 1;
-            x = eroll_int((char)top, (char)side);
-            if (x < 0)
+            if (eroll_int_greedy((char)top, (char)side, &x, &e) != 0)
                 continue;
-            entropy += 4;
-            fill_bitbuf((unsigned int)x, 4, &bits, out);
-            fprintf(err, prompt);
-            fprintf(err, "(bits extracted: %i) ", entropy);
+            fill_bitbuf(x, e, &bits, out);
+            entropy += e;
+            if (is_interactive) {
+				fputs(prompt, err);
+				fprintf(err, "(bits extracted: %i) ", entropy);
+            }
             delim = fgetc(in);
             if (delim == EOF || (char)delim == '\n')  /* TODO: Test for '\r'? */
                 break;
@@ -107,7 +109,7 @@ int roll_bits(FILE *in, FILE *out, FILE *err, int is_interactive,
                 break;
             }
         }
-    } while (1)
+    } while (1);
     flush_bitbuf(&bits, out);
     if (input_err == 1)
         warn("WARNING: Input error, see usage");
@@ -130,9 +132,9 @@ int main()
         if (tty_changed == 0)
             error("ERROR: Unable to configure terminal");
     }
-    roll_bits(in, out, err, is_interactive);
+    roll_bits(in, out, err, is_interactive, is_extended);
     if (is_interactive != 0 && tty_changed != 0) {
-        if (restore_tty(prev_tattr) != 0)
+        if (restore_tty(in, &prev_tattr) != 0)
             warn("WARNING: Unable to restore terminal settings");
     }
     exit(EXIT_SUCCESS);

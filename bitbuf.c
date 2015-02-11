@@ -12,7 +12,7 @@ int flush_bitbuf(struct bitbuf *bits, FILE *out)
 {
     size_t retv, n;
 
-    n = bits->size / bits-> unit;
+    n = bits->pos / bits->unit;
     retv = fwrite(&(bits->bs), bits->unit / 8, n, out);
     bits->pos = 0;
     if (retv < n) {
@@ -36,32 +36,28 @@ int flush_bitbuf(struct bitbuf *bits, FILE *out)
 int fill_bitbuf(unsigned int x, unsigned int entropy,
                 struct bitbuf *bits, FILE *out)
 {
-    unsigned int i, j, k;
-    int k2;
+    unsigned int i, j;
 
     /* Check input */
     if (bits->size % bits->unit != 0 ||
         bits->pos >= bits->size)
         return -1;
-    if (entropy > sizeof(x) * 8)
+    if (entropy > sizeof(int) * 8)
         return -1;
     /* Flush buffer if there isn't space to add entropy bits */
     if (bits->pos >= bits->size - entropy)
-        flush_bitbuf(bits, out);
+        if (flush_bitbuf(bits, out) != 0)
+            return -1;
     /* Add bits to buffer */
     i = bits->pos / bits->unit;
     j = bits->pos % bits->unit;
-    k2 = j + 1 + entropy - bits->unit;
     if (j == 0)
         bits->bs[i] = 0;    /* Zero out storage */
-    if (k <= 0) {
-        /* cast k to unsigned */
-        bits->bs[i] |= x << j;
-        bits->pos += entropy;
-    } else {
-        bits->bs[i] |= (x >> k) << j;
-        bits->pos += entropy - k;
-        fill_bifbuf(x % (2^k), k, bits, out);
+    bits->bs[i] |= x << j;
+    if (entropy > bits->unit - j) {
+        bits->bs[i+1] = 0;  /* Zero out storage */
+        bits->bs[i+1] |= x >> (bits->unit - j);
     }
+    bits->pos += entropy;
     return 0;
 }

@@ -4,10 +4,10 @@
 #define BUFSIZE 32    /* a small positive integer */
 
 struct bitbuf {
-    unsigned int[BUFSIZE] bs;
-    size_t  pos;
-    size_t  size;
-    size_t  unit;
+    unsigned int bs[BUFSIZE];    /* bit storage */
+    size_t  pos;                 /* position index in bits */
+    size_t  size;                /* size in bits */
+    size_t  unit;                /* int size in bits */
 };
 
 int flush_bitbuf(struct bitbuf *bits, FILE *out);

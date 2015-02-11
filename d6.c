@@ -1,3 +1,5 @@
+#include "d6.h"
+
 /** Convert one ASCII digit representing a dice roll to an integer
  *
  * To generate random bits, 2 of the 6 possible outcomes are discarded as
@@ -12,14 +14,14 @@ int roll_int_discard(char top, unsigned int *x, unsigned int *entropy)
 {
     int t;
 
-    t = (int) (top - '0');
+    t = (int)(top - '0');
     if (t <= 1 || t >= 6) {
         *x = 0;
         *entropy = 0;
         return -1;                /* reduce sample space to a power of 2 */
     }
     t -= 2;
-    assert(t >= 0 && t < 4);
+    /* assert(t >= 0 && t < 4); */
     *x = (unsigned int)t;
     *entropy = 2;
     return 0;
@@ -84,13 +86,13 @@ int eroll_int_discard(char top, char side, unsigned int *x,
 {
     int t, s, r;
 
-    t = (int) (top  - '0');
+    t = (int)(top  - '0');
     if (t <= 1 || t >= 6) {       /* reduce sample space to a power of 2 */
         *x = 0;
         *entropy = 0;
         return -1;
     }
-    s = (int) (side - '0');
+    s = (int)(side - '0');
     if (s < 1 || s > 6 ||
         s == t || s == (7 - t)) { /* side cannot match top or bottom face */
         *x = 0;
@@ -100,7 +102,7 @@ int eroll_int_discard(char top, char side, unsigned int *x,
     s -= ((s > t) ? 1 : 0) + ((s > (7 - t)) ? 1 : 0) + 1; /* map s to 0..3 */
     t -= 2;                       /* map t to 0..3 */
     r = 4 * t + s;
-    assert(r >= 0 && r < 16);
+    /* assert(r >= 0 && r < 16); */
     *x = (unsigned int)r;
     *entropy = 4;
     return 0;
@@ -127,8 +129,8 @@ int eroll_int_greedy(char top, char side, unsigned int *x,
 {
     int t, s, r;
 
-    t = (int) (top - '0');
-    s = (int) (side - '0');
+    t = (int)(top - '0');
+    s = (int)(side - '0');
     if (t < 1 || t > 6 || s < 1 || s > 6 || s == t || s == (7 - t)) {
         *x = 0;
         *entropy = 0;
@@ -138,7 +140,7 @@ int eroll_int_greedy(char top, char side, unsigned int *x,
     if (t > 1 && t < 6) {
         t -= 2;                       /* t: [0, 3] */
         r = 4 * t + s;
-        assert(r >= 0 && r < 16);
+        /* assert(r >= 0 && r < 16); */
         *x = (unsigned int)r;
         *entropy = 4;
         return 0;
@@ -148,7 +150,7 @@ int eroll_int_greedy(char top, char side, unsigned int *x,
         else
             t = 1;
         r = 4 * t + s;
-        assert(r >= 0 && r < 8);
+        /* assert(r >= 0 && r < 8); */
         *x = (unsigned int)r;
         *entropy = 3;
         return 0;
